@@ -1,7 +1,21 @@
 using SampleService;
+using Serilog;
 
-var builder = Host.CreateApplicationBuilder(args);
-builder.Services.AddHostedService<Worker>();
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.File(
+        Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "sample-service.log")
+    )
+    .CreateLogger();
 
-var host = builder.Build();
+var host = Host.CreateDefaultBuilder(args)
+    .UseWindowsService(options => {
+        options.ServiceName = "SampleService";
+    })
+    .UseSerilog()
+    .ConfigureServices((hostContext, services) =>
+    {
+        services.AddHostedService<Worker>();
+    })
+    .Build();
+
 host.Run();
